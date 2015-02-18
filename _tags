@@ -1,4 +1,4 @@
-# OASIS_START
+B# OASIS_START
 # DO NOT EDIT (digest: 73093dd938e6719a963db4a305bbc7e1)
 # Ignore VCS directories, you can use the same kind of rule outside
 # OASIS_START/STOP if you want to exclude directories that contains
@@ -37,3 +37,4 @@ true: annot, bin_annot
 <src/*.ml{,i,y}>: package(ocamlgraph)
 <src/*.ml{,i,y}>: package(threads)
 # OASIS_STOP
+<true>: profile

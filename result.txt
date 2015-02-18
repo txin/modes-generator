@@ -1,0 +1,11 @@
+# found modes: 8836
+# modes of size 1 = 0
+# modes of size 2 = 0
+# modes of size 3 = 0
+# modes of size 4 = 0
+# modes of size 5 = 0
+# modes of size 6 = 0
+# modes of size 7 = 50
+# modes of size 8 = 549
+# modes of size 9 = 3130
+# modes of size 10 = 5107
