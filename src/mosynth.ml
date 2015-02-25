@@ -31,6 +31,7 @@ let instructions l all =
 
 
 let _ =
+
   let usage_msg () = "Usage: " ^ Sys.argv.(0) ^ " [<args>]\n" in
 
   let arg_all = ref false in
