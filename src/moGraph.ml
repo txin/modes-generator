@@ -23,6 +23,76 @@ let string_of_e e =
 type t = { g : G.t; v : G.V.t list; e : G.E.t list; out_init : G.V.t;
            out_block : G.V.t }
 
+let createNew init block =
+  print_string "create new \n";
+
+  (*create a stack*)
+  let s = Stack.create () in
+  let g = G.create() in
+  let vl = ref [] in
+  let el = ref [] in
+
+ (* create a Start instruction and add it to the graph *)
+  let startV = Start in
+  let newV = G.V.create startV in
+  G.add_vertex g newV;
+
+
+
+
+  let f inst =
+    match inst with
+    | Instruction i ->
+      let dst = G.V.create i in
+
+      G.add_vertex g dst;
+
+      vl := List.append !vl [dst];
+
+      for j = 1 to MoInst.n_in inst do
+        let src = Stack.pop_exn s in
+        let e = G.E.create src Int.Set.empty dst in
+        G.add_edge_e g e;
+        el := List.append !el [e];
+      done;
+
+      for j = 1 to MoInst.n_out inst do
+        Stack.push s dst
+      done
+
+    | StackInstruction i ->
+      begin
+        match i with
+        | Swap ->
+          let first = Stack.pop_exn s in
+          let second = Stack.pop_exn s in
+          Stack.push s first;
+          Stack.push s second
+        | Twoswap ->
+          let first = Stack.pop_exn s in
+          let second = Stack.pop_exn s in
+          let third = Stack.pop_exn s in
+          Stack.push s first;
+          Stack.push s second;
+          Stack.push s third
+      end
+  in  
+  List.iter init f;
+
+
+  (*G.V.label v = Out??*)
+
+  let out_init = List.find_exn !vl ~f:(fun v -> G.V.label v = Out) in
+  List.iter block f;
+  let out_block = List.find_exn (List.rev !vl) ~f:(fun v -> G.V.label v = Out) in
+
+  let t = { g = g; v = !vl; e = !el; out_init = out_init;
+            out_block = out_block } in
+  t
+
+
+
+
 let create init block =
   let s = Stack.create () in
   let g = G.create () in

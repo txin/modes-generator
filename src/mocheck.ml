@@ -102,14 +102,17 @@ let _ =
           maxsize := size;
         try run !arg_init block with
         | Success ->
-          if MoGeneration.exists
-              ~keep_dups:(not !arg_remove_dups)
-              tbl
-              (to_insts !arg_init Init)
-              (to_insts block Block)
-          then
-            ()
-          else
+
+          (*no dups*)
+
+          (* if MoGeneration.exists *)
+          (*     ~keep_dups:(not !arg_remove_dups) *)
+          (*     tbl *)
+          (*     (to_insts !arg_init Init) *)
+          (*     (to_insts block Block) *)
+          (* then *)
+          (*   () *)
+          (* else *)
             let block = to_insts block Block in
             blocks := block :: !blocks
         | Failed -> ()
