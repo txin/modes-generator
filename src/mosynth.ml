@@ -74,40 +74,9 @@ let _ =
 
   (* 'all' is a list of the instruction we are using *)
   let all = [
-    "DUP"; "INC"; "M"; "NEXTIV"; "OUT"; "PRF"; "PRP"; "XOR"; "SWAP"; "2SWAP"
+    "DUP"; "INC"; "M"; "NEXTIV"; "OUT"; "PRF"; "PRP"; "XOR"; 
   ] in
   let all = instructions !arg_ops all in
   let init = MoInst.from_string_block (!arg_init) Init in
-
-  let run block_size =
-    let blocks =
-      MoGeneration.gen init block_size all
-    in
-    List.append blocks in
-
-  run !arg_block_size;
-
-  (* let f = *)
-  (*   if !arg_valid_count then *)
-  (*     run (fun g -> MoGraph.is_valid g) *)
-  (*   else if !arg_decryptable_count then *)
-  (*     run (fun g -> MoGraph.is_valid g && MoGraph.is_decryptable g) *)
-  (*   else *)
-  (*     run (fun g -> MoGraph.is_valid g && MoGraph.is_decryptable g *)
-  (*                   && MoGraph.is_secure g) *)
-  (* in *)
-
-  (* let found = *)
-  (*   if !arg_all then *)
-  (*     let sizes = List.range 1 (!arg_block_size + 1) in *)
-  (*     List.fold_left sizes ~init:[] ~f:f *)
-  (*   else *)
-  (*     f [] !arg_block_size *)
-  (* in *)
-
-  (* if !arg_print_modes then *)
-  (*   MoInst.print_modes found !arg_block_size; *)
-  (* Printf.printf "# found modes: %d\n" (List.length found); *)
-  (* for i = 1 to !arg_block_size do *)
-  (*   Printf.printf "# modes of size %d = %d\n%!" i (MoInst.count found i) *)
-  (* done *)
+  
+  MoGeneration.gen init !arg_block_size all;
