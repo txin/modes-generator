@@ -80,3 +80,4 @@ let _ =
   let init = MoInst.from_string_block (!arg_init) Init in
   
   MoGeneration.gen init !arg_block_size all;
+

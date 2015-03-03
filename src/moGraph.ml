@@ -18,8 +18,13 @@ let string_of_e e =
   List.to_string Int.to_string l
 
 let create init block =
-  let g = G.create() in
+  let g = G.create() in  
+  let dst = G.V.create Start in
+  G.add_vertex g dst;
   g
+
+
+
 
 let display_with_feh g =
   let module Display = struct
