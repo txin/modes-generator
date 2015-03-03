@@ -18,12 +18,18 @@ let string_of_e e =
   List.to_string Int.to_string l
 
 let create init block =
+
   let g = G.create() in  
-  let dst = G.V.create Start in
-  G.add_vertex g dst;
+  let f inst =
+    match inst with
+    |Instruction i ->
+      G.V.create i |> G.add_vertex g;
+    |_ -> 
+      Log.info("Error: invalid instructions.");
+  in
+  List.iter init f;
+  List.iter block f;
   g
-
-
 
 
 let display_with_feh g =
