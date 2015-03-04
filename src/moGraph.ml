@@ -17,18 +17,46 @@ let string_of_e e =
   let l = G.E.label e |> Int.Set.to_list in
   List.to_string Int.to_string l
 
+(* keep a separate edge list and vertex list *)
 let create init block =
-
+  let vl = ref[] in
+  let el = ref[] in
+  
+  let v = G.V.create Start in
+  (* old API create, newer: make*)
+  let va = Array.create 3 v in
+  Array.set va 1 (G.V.create Xor);
+  
+  
+  let base_vl = ref[Instruction Xor; Instruction Dup] in
+  (* base_vl := block :: !base_vl; *)
   let g = G.create() in  
-  let f inst =
+  let addVE inst =
     match inst with
     |Instruction i ->
-      G.V.create i |> G.add_vertex g;
+      let v = G.V.create i in
+      G.add_vertex g v;
+      vl := List.append !vl [v];
     |_ -> 
       Log.info("Error: invalid instructions.");
   in
-  List.iter init f;
-  List.iter block f;
+ 
+  G.add_edge g va.(0) va.(1);
+  (* List.iter init f; *)
+  (* add vertices from block*)
+  (* List.iter block f;  *)
+  List.iter block addVE;
+  List.iter !base_vl addVE;
+  
+  (* create one edge *)
+
+  (* let src = List.nth !vl 0  in  *)
+  (* List location doesn't work, use hash instead?*)
+  let src = List.find_exn !vl ~f:(fun v-> G.V.label v = Start) in
+  let dst = List.find_exn !vl ~f:(fun v-> G.V.label v = Xor)in
+  let e = G.E.create src Int.Set.empty dst in
+  G.add_edge_e g e;
+  el := List.append !el [e];
   g
 
 
