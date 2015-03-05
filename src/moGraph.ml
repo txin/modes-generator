@@ -17,6 +17,12 @@ let string_of_e e =
   let l = G.E.label e |> Int.Set.to_list in
   List.to_string Int.to_string l
 
+(* iterate the edges of the graph *)
+(* add PRFs in between the edges of the base graphs *)
+let add_PRF g = 
+  (* G.iter_edges g; *)
+  Log.info "add_PRF"
+
 (* keep a separate edge list and vertex list *)
 let create init block =
   (* keep a ctr for the vertex *)
@@ -53,6 +59,12 @@ let create init block =
     G.add_edge g va.(src) va.(dst)
   in
   List.iter base_graph_1 add_edge_tuple;
+  add_PRF g;
+  (* test iter_edges *)
+  (* G.iter_edges va.(0) va.(1);p *)
+  let f src dst =
+    Log.info ("iter_edges f") in
+  G.iter_edges f g;
   g
 
 
