@@ -19,9 +19,6 @@ let string_of_e e =
 
 (* keep a separate edge list and vertex list *)
 let create init block =
-  let vl = ref[] in
-  let el = ref[] in
-  
   (* keep a ctr for the vertex *)
   (* old API create, newer: make*)
   (* use 7 ops first *)
@@ -40,26 +37,22 @@ let create init block =
       G.add_vertex g v;
       Array.set va !e_ctr v;
       e_ctr := !e_ctr + 1;
-      (* vl := List.append !vl [v]; *)
-
     |_ -> 
       Log.info("Error: invalid instructions.");
   in
  
-  (* List.iter init f; *)
   (* add vertices from block*)
-  (* List.iter block f;  *)
   List.iter block addV;
   List.iter !base_vl addV;
-  G.add_edge g va.(0) va.(1);  
-  (* create one edge *)
-  (* let src = List.nth !vl 0  in  *)
-  (* List location doesn't work, use hash instead?*)
-  (* let src = List.find_exn !vl ~f:(fun v-> G.V.label v = Start) in *)
-  (* let dst = List.find_exn !vl ~f:(fun v-> G.V.label v = Xor)in *)
-  (* let e = G.E.create src Int.Set.empty dst in *)
-  (* G.add_edge_e g e; *)
-  (* el := List.append !el [e]; *)
+
+  (* a list of tuples to represent the edges*)
+  let base_graph_1 = [(0,4); (1,4); (4,5); (5,2); (5,3)] in
+
+  let add_edge_tuple tup =
+    let (src, dst) = tup in
+    G.add_edge g va.(src) va.(dst)
+  in
+  List.iter base_graph_1 add_edge_tuple;
   g
 
 
