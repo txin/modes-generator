@@ -22,41 +22,44 @@ let create init block =
   let vl = ref[] in
   let el = ref[] in
   
-  let v = G.V.create Start in
+  (* keep a ctr for the vertex *)
   (* old API create, newer: make*)
-  let va = Array.create 3 v in
-  Array.set va 1 (G.V.create Xor);
-  
-  
+  (* use 7 ops first *)
+  let e_ctr = ref 0 in
+  let v = G.V.create Start in
+  let va = Array.create 7 v in
+
   let base_vl = ref[Instruction Xor; Instruction Dup] in
+  (* concatenate doesn't work so far *)
   (* base_vl := block :: !base_vl; *)
   let g = G.create() in  
-  let addVE inst =
+  let addV inst =
     match inst with
     |Instruction i ->
       let v = G.V.create i in
       G.add_vertex g v;
-      vl := List.append !vl [v];
+      Array.set va !e_ctr v;
+      e_ctr := !e_ctr + 1;
+      (* vl := List.append !vl [v]; *)
+
     |_ -> 
       Log.info("Error: invalid instructions.");
   in
  
-  G.add_edge g va.(0) va.(1);
   (* List.iter init f; *)
   (* add vertices from block*)
   (* List.iter block f;  *)
-  List.iter block addVE;
-  List.iter !base_vl addVE;
-  
+  List.iter block addV;
+  List.iter !base_vl addV;
+  G.add_edge g va.(0) va.(1);  
   (* create one edge *)
-
   (* let src = List.nth !vl 0  in  *)
   (* List location doesn't work, use hash instead?*)
-  let src = List.find_exn !vl ~f:(fun v-> G.V.label v = Start) in
-  let dst = List.find_exn !vl ~f:(fun v-> G.V.label v = Xor)in
-  let e = G.E.create src Int.Set.empty dst in
-  G.add_edge_e g e;
-  el := List.append !el [e];
+  (* let src = List.find_exn !vl ~f:(fun v-> G.V.label v = Start) in *)
+  (* let dst = List.find_exn !vl ~f:(fun v-> G.V.label v = Xor)in *)
+  (* let e = G.E.create src Int.Set.empty dst in *)
+  (* G.add_edge_e g e; *)
+  (* el := List.append !el [e]; *)
   g
 
 
