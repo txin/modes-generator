@@ -1,3 +1,5 @@
+open Graph
+
 open Core.Std
 open MoOps
 module MoInst = MoInstructions
@@ -9,6 +11,8 @@ module E = struct
 end
 module V = struct type t = MoOps.instruction end
 module G = Graph.Imperative.Digraph.AbstractLabeled(V)(E)
+module Dfs = Traverse.Dfs(G)
+module Bfs = Traverse.Bfs(G)
 
 let string_of_v v =
   MoInst.string_of_t (Instruction (G.V.label v))
@@ -22,6 +26,32 @@ let string_of_e e =
 let add_PRF g = 
   (* G.iter_edges g; *)
   Log.info "add_PRF"
+
+let test_bfs g =
+  let rec loop i =
+    let v = Bfs.get i in
+    Log.info "v";
+    loop (Bfs.step i)
+  in
+  try loop (Bfs.start g) with Exit -> ()
+
+
+(* Set edge 'e' in 't' to have label 'label' *)
+let replace_edge g e label =
+  G.remove_edge_e g e;
+  let e = G.E.create (G.E.src e) label (G.E.dst e) in
+  G.add_edge_e g e
+
+(* Clear labels on all edges in 't' *)
+let clear g =
+  G.iter_edges_e (fun e -> replace_edge g e Int.Set.empty) g
+
+(* assign families BFS *)
+let assign_families g = 
+  Log.info("assign_families");
+  clear g;
+  test_bfs g
+  
 
 (* keep a separate edge list and vertex list *)
 let create init block =
@@ -65,9 +95,13 @@ let create init block =
   let f src dst =
     Log.info ("iter_edges f") in
   G.iter_edges f g;
+  assign_families g;
   g
 
+    
 
+
+(* display with dot file*)
 let display_with_feh g =
   let module Display = struct
     include G
