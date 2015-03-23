@@ -27,11 +27,18 @@ let add_PRF g =
   (* G.iter_edges g; *)
   Log.info "add_PRF"
 
-let test_bfs g =
+let bfs_assign_families g =
+  let fam_cnt = ref 1 in
   let rec loop i =
     let v = Bfs.get i in
-    Log.info "v";
-    loop (Bfs.step i)
+    let el = G.pred_e g v in
+    if List.length el >= 1 then
+      begin
+      List.hd_exn el;
+      loop (Bfs.step i)
+      end
+    else
+      loop (Bfs.step i)
   in
   try loop (Bfs.start g) with Exit -> ()
 
@@ -50,7 +57,7 @@ let clear g =
 let assign_families g = 
   Log.info("assign_families");
   clear g;
-  test_bfs g
+  bfs_assign_families g
   
 
 (* keep a separate edge list and vertex list *)

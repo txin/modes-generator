@@ -1,0 +1,8 @@
+* assign families
+- [ ] ctr of edges
+- [ ] parents
+- [ ] rules for different operation
+* labeling
+- [ ] SMT interface
+* combination
+* profiling
