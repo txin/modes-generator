@@ -27,6 +27,14 @@ let add_PRF g =
   (* G.iter_edges g; *)
   Log.info "add_PRF"
 
+
+(* Set edge 'e' in 't' to have label 'label' *)
+let replace_edge g e label =
+  G.remove_edge_e g e;
+  let e = G.E.create (G.E.src e) label (G.E.dst e) in
+  G.add_edge_e g e
+
+
 let bfs_assign_families g =
   let fam_cnt = ref 1 in
   let rec loop i =
@@ -34,7 +42,12 @@ let bfs_assign_families g =
     let el = G.pred_e g v in
     if List.length el >= 1 then
       begin
-      List.hd_exn el;
+      let e = List.hd_exn el in 
+      let set = Int.Set.singleton !fam_cnt in
+      fam_cnt := !fam_cnt + 1;
+      replace_edge g e set;
+      Log.info "%s" (string_of_e e);
+      Log.info "%s" (string_of_v v);
       loop (Bfs.step i)
       end
     else
@@ -42,12 +55,6 @@ let bfs_assign_families g =
   in
   try loop (Bfs.start g) with Exit -> ()
 
-
-(* Set edge 'e' in 't' to have label 'label' *)
-let replace_edge g e label =
-  G.remove_edge_e g e;
-  let e = G.E.create (G.E.src e) label (G.E.dst e) in
-  G.add_edge_e g e
 
 (* Clear labels on all edges in 't' *)
 let clear g =
