@@ -11,8 +11,8 @@ module E = struct
   end
 module V = struct type t = MoOps.instruction end
 module G = Graph.Imperative.Digraph.AbstractLabeled(V)(E)
-module Dfs = Traverse.Dfs(G)
-module Bfs = Traverse.Bfs(G)
+
+module Topo = Topological.Make_stable(G)
 
 let string_of_v v =
   MoInst.string_of_t (Instruction (G.V.label v))
@@ -66,32 +66,15 @@ let match_label g v fam_cnt =
                     (* failwith "should not reach here!" *)
                     true
 
-let bfs_assign_families g =
-  let fam_cnt = ref 0 in
-  let rec loop i =
-    let v = Bfs.get i in
-    let el = G.pred_e g v in
-    if List.length el >= 1 then
-      begin
-        match_label g v fam_cnt;
-        loop (Bfs.step i)
-      end
-    else
-      loop (Bfs.step i)
-  in
-  try loop (Bfs.start g) with Exit -> ()
-
-
 (* Clear labels on all edges in 't' *)
 let clear g =
   G.iter_edges_e (fun e -> replace_edge g e Int.Set.empty) g
 
-(* assign families BFS *)
+(* assign_families using toplogical sort *)
 let assign_families g = 
   Log.info("assign_families");
   clear g;
-  bfs_assign_families g
-                      
+  Topo.iter (fun v -> Log.info "%s" (string_of_v v)) g
 
 (* keep a separate edge list and vertex list *)
 let create init block =
@@ -130,11 +113,6 @@ let create init block =
   in
   List.iter base_graph_1 add_edge_tuple;
   add_PRF g;
-  (* test iter_edges *)
-  (* G.iter_edges va.(0) va.(1);p *)
-  let f src dst =
-    Log.info ("iter_edges f") in
-  G.iter_edges f g;
   assign_families g;
   g
 
