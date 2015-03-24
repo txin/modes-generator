@@ -27,7 +27,6 @@ let add_PRF g =
   (* G.iter_edges g; *)
   Log.info "add_PRF"
 
-
 (* Set edge 'e' in 't' to have label 'label' *)
 let replace_edge g e label =
   G.remove_edge_e g e;
@@ -35,36 +34,43 @@ let replace_edge g e label =
   G.add_edge_e g e
 
 (* first set up the edge be the first element of the list *)
-let match_label g v fam_cnt =
-  Log.info "%d" !fam_cnt;
-  let parents v = G.pred_e g v in
-  let parent v = parents v |> List.hd_exn in 
+
+(* global variable to save family counter *)
+let fam_cnt = ref 0
+
+(* initialize Start and M with families*)
+let match_label g v =
+  Log.info "%s %d" (string_of_v v) !fam_cnt;
   let label = G.V.label v in
-  let e = G.pred_e g v |> List.hd_exn in
-  match label with
-  | Dup | Inc | Nextiv_init ->
-                 let e' = parent v in
-                 replace_edge g e (G.E.label e');
-                 true
-  | Genrand | M | Prf | Prp | Start ->
-                               let set = Int.Set.singleton !fam_cnt in
-                               fam_cnt := !fam_cnt + 1;
-                               replace_edge g e set;
-                               true
-  | Xor ->
-     let elist = parents v in
-     let l = List.hd_exn elist in
-     let r = List.last_exn elist in
-     let inter = Int.Set.inter (G.E.label l) (G.E.label r) in
-     if Int.Set.length inter <> 0 then
-       false
-     else
-       let fam = Int.Set.union (G.E.label l) (G.E.label r) in
-       replace_edge g e fam;
-       true
-  | Nextiv_block | Out ->
-                    (* failwith "should not reach here!" *)
-                    true
+  let el = G.pred_e g v in
+  if List.length el >= 1 then
+    let e = G.pred_e g v |> List.hd_exn in
+
+    let parents v = G.pred_e g v in
+    let parent v = parents v |> List.hd_exn in 
+
+    match label with
+    | Dup | Inc | Nextiv_init ->
+                   let e' = parent v in
+                   replace_edge g e (G.E.label e')
+
+    | Genrand | M | Prf | Prp | Start ->
+                                 let set = Int.Set.singleton !fam_cnt in
+                                 fam_cnt := !fam_cnt + 1;
+                                 replace_edge g e set
+    | Xor ->
+       let l = List.hd_exn el in
+       let r = List.last_exn el in
+       let inter = Int.Set.inter (G.E.label l) (G.E.label r) in
+       if Int.Set.length inter <> 0 then
+         ()
+       else
+         let fam = Int.Set.union (G.E.label l) (G.E.label r) in
+         replace_edge g e fam;
+    | Nextiv_block | Out -> ()
+
+  else
+    ()
 
 (* Clear labels on all edges in 't' *)
 let clear g =
@@ -74,7 +80,7 @@ let clear g =
 let assign_families g = 
   Log.info("assign_families");
   clear g;
-  Topo.iter (fun v -> Log.info "%s" (string_of_v v)) g
+  Topo.iter (fun v -> match_label g v) g
 
 (* keep a separate edge list and vertex list *)
 let create init block =
