@@ -36,18 +36,17 @@ let replace_edge g e label =
 (* first set up the edge be the first element of the list *)
 
 (* global variable to save family counter *)
-let fam_cnt = ref 0
+let fam_cnt = ref 1
 
 (* initialize Start and M with families*)
 let match_label g v =
   Log.info "%s %d" (string_of_v v) !fam_cnt;
   let label = G.V.label v in
-  let el = G.pred_e g v in
-  if List.length el >= 1 then
-    let e = G.pred_e g v |> List.hd_exn in
-
-    let parents v = G.pred_e g v in
-    let parent v = parents v |> List.hd_exn in 
+  let pre_elist = G.pred_e g v in
+  let succ_elist = G.succ_e g v in
+  if List.length succ_elist >= 1 then
+    let e = List.hd_exn succ_elist in
+    let parent v = List.hd_exn pre_elist in 
 
     match label with
     | Dup | Inc | Nextiv_init ->
@@ -59,8 +58,8 @@ let match_label g v =
                                  fam_cnt := !fam_cnt + 1;
                                  replace_edge g e set
     | Xor ->
-       let l = List.hd_exn el in
-       let r = List.last_exn el in
+       let l = List.hd_exn pre_elist in
+       let r = List.last_exn pre_elist in
        let inter = Int.Set.inter (G.E.label l) (G.E.label r) in
        if Int.Set.length inter <> 0 then
          ()
@@ -68,9 +67,9 @@ let match_label g v =
          let fam = Int.Set.union (G.E.label l) (G.E.label r) in
          replace_edge g e fam;
     | Nextiv_block | Out -> ()
-
   else
     ()
+                       
 
 (* Clear labels on all edges in 't' *)
 let clear g =
@@ -79,7 +78,7 @@ let clear g =
 (* assign_families using toplogical sort *)
 let assign_families g = 
   Log.info("assign_families");
-  clear g;
+  (* clear g; *)
   Topo.iter (fun v -> match_label g v) g
 
 (* keep a separate edge list and vertex list *)
