@@ -49,7 +49,13 @@ let match_label g v =
     let parent v = List.hd_exn pre_elist in 
 
     match label with
-    | Dup | Inc | Nextiv_init ->
+    | Dup ->                
+       let e' = parent v in
+       let e_2 = List.last_exn succ_elist in
+       replace_edge g e (G.E.label e');
+       replace_edge g e_2 (G.E.label e');
+
+    | Inc | Nextiv_init ->
                    let e' = parent v in
                    replace_edge g e (G.E.label e')
 
