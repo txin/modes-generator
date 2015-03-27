@@ -87,6 +87,30 @@ let assign_families g =
   (* clear g; *)
   Topo.iter (fun v -> match_label g v) g
 
+(* validate with SMT solver *)
+let validate g =
+  Log.info "Validating graph...";
+  let smt = MoSmt.create () in
+  let f v =
+    Log.debug "  Hit %s" ((MoOps.Instruction (G.V.label v)) |> MoInst.string_of_t);
+    MoSmt.op smt (G.V.label v) in
+ 
+  (* TODO: topological sort once then, saved as an list? *)
+  (* Topological iterator only supports functor with unit as return value *)
+  (* let v_list = [] in *)
+  (* let add_v_list v =  *)
+  (*   v_list = v_list :: v in *)
+  (* convert Topological iterator to a list*)
+  (* Topo.iter (fun v -> add_v_list v) g; *)
+  
+  MoSmt.finalize smt;
+  let fname = Filename.temp_file "z3" ".smt2" in
+  MoSmt.write_to_file smt fname;
+  let result = MoSmt.run fname in
+  Sys.remove fname;
+  result
+
+
 (* keep a separate edge list and vertex list *)
 let create init block =
   (* keep a ctr for the vertex *)

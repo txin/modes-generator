@@ -1,0 +1,49 @@
+* base graphs
+- [X] level combination
+- [ ] #src -> all combinations
+- [ ] structure
+- [ ] B1
+- [ ] B2
+- [ ] B3
+* decryptable
+- [ ] same block
+- [ ] with previous block
+
+* duplication
+- [ ] hashtable
+
+* assign families
+- [X] topological sort
+- [ ] save as a list for traversal of edges and vertices
+* valid -> secure
+- [ ] SMT solver
+
+
+
+
+* base graphs
+- constraints
+  n srcs -> n-1 XORs -> n-1 B_i
+- distinct outputs
+  B1: 2 -> 1
+  B2: 2 -> 2
+  B3: 3 -> 2
+
+* #src = 3
+- [B1] [B1]
+- [B1] [B2] ?
+- [B2] [B1]
+- [B2] [B2]
+- [B2] [B3]
+- [B3] [B1]
+- [B3] [B2]
+* #src = 4
+* algorithm
+
+|                  | B1   | B2   | B3   |
+|------------------+------+------+------|
+| distinct outputs | 2->1 | 2->2 | 3->2 |
+| change           | -1   | 0    | -1   |
+- #src = n, #B = n - 1, #level =< #B =< n - 1
+
+
