@@ -75,7 +75,6 @@ let match_label g v =
     | Nextiv_block | Out -> ()
   else
     ()
-                       
 
 (* Clear labels on all edges in 't' *)
 let clear g =
@@ -95,14 +94,16 @@ let validate g =
     Log.debug "  Hit %s" ((MoOps.Instruction (G.V.label v)) |> MoInst.string_of_t);
     MoSmt.op smt (G.V.label v) in
  
-  (* TODO: topological sort once then, saved as an list? *)
   (* Topological iterator only supports functor with unit as return value *)
-  (* let v_list = [] in *)
-  (* let add_v_list v =  *)
-  (*   v_list = v_list :: v in *)
-  (* convert Topological iterator to a list*)
-  (* Topo.iter (fun v -> add_v_list v) g; *)
+  (* concatenate the list*)
+  let v_list = ref [] in
+  let add_v_list v =
+    v_list := List.append !v_list [v];
+    () in
+  (* convert Topological iterator to a list *)
+  Topo.iter (fun v -> add_v_list v) g;
   
+  List.iter !v_list f; 
   MoSmt.finalize smt;
   let fname = Filename.temp_file "z3" ".smt2" in
   MoSmt.write_to_file smt fname;
@@ -149,6 +150,7 @@ let create init block =
   List.iter base_graph_1 add_edge_tuple;
   add_PRF g;
   assign_families g;
+  validate g;
   g
 
 (* display with dot file*)

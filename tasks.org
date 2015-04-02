@@ -1,3 +1,8 @@
+* doing
+** DONE topological order to list
+CLOSED: [2015-04-02 Thu 22:52]
+CLOCK: [2015-04-02 Thu 22:28]--[2015-04-02 Thu 22:52] =>  0:24
+- save once?
 * base graphs
 - [X] level combination
 - [ ] #src -> all combinations
@@ -8,7 +13,6 @@
 * decryptable
 - [ ] same block
 - [ ] with previous block
-
 * duplication
 - [ ] hashtable
 
@@ -17,9 +21,6 @@
 - [ ] save as a list for traversal of edges and vertices
 * valid -> secure
 - [ ] SMT solver
-
-
-
 
 * base graphs
 - constraints
@@ -39,7 +40,6 @@
 - [B3] [B2]
 * #src = 4
 * algorithm
-
 |                  | B1   | B2   | B3   |
 |------------------+------+------+------|
 | distinct outputs | 2->1 | 2->2 | 3->2 |
@@ -47,3 +47,10 @@
 - #src = n, #B = n - 1, #level =< #B =< n - 1
 
 
+* algorithm
+** base graph
+- optional, hashtable
+- input #src
+- each level
+- array: instructions, edge list, 
+- label: input, output
