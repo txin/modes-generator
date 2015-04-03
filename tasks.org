@@ -1,8 +1,6 @@
 * doing
-** DONE topological order to list
-CLOSED: [2015-04-02 Thu 22:52]
-CLOCK: [2015-04-02 Thu 22:28]--[2015-04-02 Thu 22:52] =>  0:24
-- save once?
+** TODO SMT interface
+- Genrand -> exception?
 * base graphs
 - [X] level combination
 - [ ] #src -> all combinations
@@ -54,3 +52,9 @@ CLOCK: [2015-04-02 Thu 22:28]--[2015-04-02 Thu 22:52] =>  0:24
 - each level
 - array: instructions, edge list, 
 - label: input, output
+
+* completed tasks
+** DONE topological order to list
+CLOSED: [2015-04-02 Thu 22:52]
+CLOCK: [2015-04-02 Thu 22:28]--[2015-04-02 Thu 22:52] =>  0:24
+- save once?

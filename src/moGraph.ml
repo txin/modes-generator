@@ -111,15 +111,20 @@ let validate g =
   Sys.remove fname;
   result
 
-
 (* keep a separate edge list and vertex list *)
+(* TODO: add INIT block *)
 let create init block =
+  (* TODO: add INIT block *)
+
   (* keep a ctr for the vertex *)
   (* old API create, newer: make*)
   (* use 7 ops first *)
   let e_ctr = ref 0 in
+  
   let v = G.V.create Start in
-  let va = Array.create 7 v in
+  
+  (* use INIT(4) + BLOCK(7) first *)
+  let va = Array.create 11 v in
 
   let base_vl = ref[Instruction Xor; Instruction Dup] in
   (* concatenate doesn't work so far *)
@@ -136,17 +141,22 @@ let create init block =
       Log.info("Error: invalid instructions.");
   in
   
+  List.iter init addV;
+
   (* add vertices from block*)
   List.iter block addV;
   List.iter !base_vl addV;
 
   (* a list of tuples to represent the edges*)
-  let base_graph_1 = [(0,4); (1,4); (4,5); (5,2); (5,3)] in
+  (* last tuple connects Init and Block *)
+  let init_graph = [(0, 1); (1, 2); (1, 3); (3, 4)] in
+  let base_graph_1 = [(4,8); (5,8); (8,9); (9,6); (9,7)] in
 
   let add_edge_tuple tup =
     let (src, dst) = tup in
     G.add_edge g va.(src) va.(dst)
   in
+  List.iter init_graph add_edge_tuple;
   List.iter base_graph_1 add_edge_tuple;
   add_PRF g;
   assign_families g;
