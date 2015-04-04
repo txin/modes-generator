@@ -1,7 +1,10 @@
 * doing
 ** TODO PRPs algorithms
-CLOCK: [2015-04-04 Sat 21:40]
+CLOCK: [2015-04-04 Sat 23:38]--[2015-04-05 Sun 00:06] =>  0:28
 CLOCK: [2015-04-03 Fri 22:20]--[2015-04-03 Fri 22:41] =>  0:21
+:PROPERTIES:
+:Effort:   2:00
+:END:
 algorithm
 1. iterate the edges
 2. get the src and dst vertices
@@ -14,6 +17,8 @@ algorithm
 - [X] test Z3 solver
 - [ ] topological order -> save list or not?
 - [ ] add new PRP or OP -> sort -> save list 
+* improve
+- [ ] add PRFs, iterate all the edges
 * base graphs
 - [X] level combination
 - [X] #src -> all combinations
@@ -31,7 +36,7 @@ algorithm
 - [X] topological sort
 - [ ] save as a list for traversal of edges and vertices
 * valid -> secure
-- [ ] SMT solver
+- [X] SMT solver
 
 * base graphs
 - constraints
