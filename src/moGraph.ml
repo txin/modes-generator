@@ -22,10 +22,28 @@ let string_of_e e =
   List.to_string Int.to_string l
 
 (* iterate the edges of the graph *)
-(* add PRFs in between the edges of the base graphs *)
+(* add PRFs on the edges of the base graphs *)
+
 let add_PRF g = 
-  (* G.iter_edges g; *)
+  let prf_cnt = ref 0 in
+  let add_PRF_on_edge src dst = 
+    Log.info "add_PRF_on_edge";
+    if !prf_cnt = 0 then  
+      let v = G.V.create Prf in
+      G.add_vertex g v;
+      G.remove_edge g src dst;
+      G.add_edge g src v;
+      G.add_edge g v dst;
+      prf_cnt := !prf_cnt + 1
+    else
+      ()
+  in
+  
+  (* stop? always iterate all the edges *)
+  G.iter_edges (fun src dst -> add_PRF_on_edge src dst) g;
   Log.info "add_PRF"
+  (* TODO: later decide whether use PRF or PRP*)
+
 
 (* Set edge 'e' in 't' to have label 'label' *)
 let replace_edge g e label =
@@ -109,18 +127,15 @@ let validate g =
   MoSmt.write_to_file smt fname;
   let result = MoSmt.run fname in
   Sys.remove fname;
+  Log.info " %b" result;
   result
 
 (* keep a separate edge list and vertex list *)
-(* TODO: add INIT block *)
 let create init block =
-  (* TODO: add INIT block *)
-
   (* keep a ctr for the vertex *)
   (* old API create, newer: make*)
   (* use 7 ops first *)
   let e_ctr = ref 0 in
-  
   let v = G.V.create Start in
   
   (* use INIT(4) + BLOCK(7) first *)
@@ -158,9 +173,22 @@ let create init block =
   in
   List.iter init_graph add_edge_tuple;
   List.iter base_graph_1 add_edge_tuple;
-  add_PRF g;
+
+  add_PRF g; 
+  (* hardcoded test first *)
+
+  (* let v = G.V.create Prp in *)
+  (* G.add_vertex g v; *)
+  (* Array.set va !e_ctr v; *)
+  (* e_ctr := !e_ctr + 1; *)
+
+
+  (* G.remove_edge g va.(8) va.(9); *)
+  (* G.add_edge g va.(8) va.(10);  *)
+  (* G.add_edge g va.(10) va.(9);  *)
+  
   assign_families g;
-  validate g;
+  (* validate g; *)
   g
 
 (* display with dot file*)
