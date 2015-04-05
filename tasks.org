@@ -1,6 +1,5 @@
 #+PROPERTY: Effort_ALL 0 0:10 0:30 1:00 2:00 3:00 4:00 5:00 6:00 7:00
-#+COLUMNS: %40ITEM(Task) %17Effort(Estimated Effort){:} %CLOCKSUM
-
+#+COLUMNS: %40ITEM(Task) %17Effort(Effort){:} %CLOCKSUM
 * Doing
 ** TODO PRPs algorithms
 CLOCK: [2015-04-04 Sat 23:38]--[2015-04-05 Sun 00:06] =>  0:28
@@ -19,6 +18,13 @@ CLOCK: [2015-04-03 Fri 22:20]--[2015-04-03 Fri 22:41] =>  0:21
 - [ ] adding PRPs or PRFs? (first all use PRP)
 - [X] test Z3 so
 
+** TODO decryptable
+:PROPERTIES:
+:Effort:   1:00
+:END:
+- [ ] pointer to the inputs outputs?
+- [ ] same block
+- [ ] with previous block
 * Todo
 ** improvement
 - [ ] add PRFs, iterate all the edges
@@ -36,10 +42,7 @@ CLOCK: [2015-04-03 Fri 22:20]--[2015-04-03 Fri 22:41] =>  0:21
 - [ ] B1
 - [ ] B2
 - [ ] B3
-** decryptable
-- [ ] pointer to the inputs outputs?
-- [ ] same block
-- [ ] with previous block
+
 ** duplication
 - [ ] hashtable
 

@@ -14,6 +14,8 @@ module G = Graph.Imperative.Digraph.AbstractLabeled(V)(E)
 
 module Topo = Topological.Make_stable(G)
 
+type t = { g : G.t; e : G.E.t list}
+
 let string_of_v v =
   MoInst.string_of_t (Instruction (G.V.label v))
 
@@ -23,27 +25,40 @@ let string_of_e e =
 
 (* iterate the edges of the graph *)
 (* add PRFs on the edges of the base graphs *)
-
 let add_PRF g = 
-  let prf_ctr = ref 0 in
+  (* number of prf *)
+  let prf_ctr = ref 3 in
+  let el = ref [] in
+  let save_edges e = 
+    (* Log.info "%s" (string_of_e e); *)
+    el := List.append !el [e];
+  in
+    
   let add_PRF_on_edge src dst = 
     Log.info "add_PRF_on_edge";
-    if !prf_ctr = 0 then  
+    if !prf_ctr > 0 then  
       let v = G.V.create Prf in
       G.add_vertex g v;
       G.remove_edge g src dst;
       G.add_edge g src v;
       G.add_edge g v dst;
-      prf_ctr := !prf_ctr + 1;
+      prf_ctr := !prf_ctr - 1
     else
       ()
   in
-  
-  (* stop? always iterate all the edges *)
-  G.iter_edges (fun src dst -> add_PRF_on_edge src dst) g;
-  Log.info "add_PRF"
-  (* TODO: later decide whether use PRF or PRP*)
+  let add_PRF_on_edges e = 
+    add_PRF_on_edge (G.E.src e) (G.E.dst e)
+  in
+  G.iter_edges_e (fun e -> save_edges e) g;
+  (* List.nth doesn't work!! *)
+  let e = List.hd_exn !el in
+  let e_array = Array.create 15 e in
+  Array.set e_array 0 e;
 
+  (* add_PRF_on_edges e; *)
+  (* List.iter !el add_PRF_on_edges; *)
+  (* G.iter_edges (fun src dst -> add_PRF_on_edge src dst) g; *)
+  Log.info "add_PRF"
 
 (* Set edge 'e' in 't' to have label 'label' *)
 let replace_edge g e label =
@@ -174,9 +189,13 @@ let create init block =
   List.iter base_graph_1 add_edge_tuple;
   (* add PRF to the block*)
   add_PRF g; 
+  (* Here generate a list of candidates *)
+
   List.iter init_graph add_edge_tuple;
   assign_families g;
-  validate g;
+
+  (* validate g; *)
+  (* TODO: think about the return values *)
   g
 
 (* display with dot file*)
@@ -209,13 +228,3 @@ let display_with_feh g =
   Out_channel.close oc;
   ignore (Sys.command ("dot -Tpng " ^ tmp ^ " | feh -"));
   Sys.remove tmp
-
-(*Set edge 'e' in 't' to have label 'label'*)
-let replace_edge g e label = 
-  G.remove_edge_e g e;
-  let e = G.E.create(G.E.src e) label (G.E.dst e) in
-  G.add_edge_e g e
-
-(*Clear labels on all edges in 't'*)
-let clear g =
-  G.iter_edges_e(fun e -> replace_edge g e Int.Set.empty) g
