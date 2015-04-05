@@ -52,9 +52,14 @@ let add_PRF g =
   G.iter_edges_e (fun e -> save_edges e) g;
   (* List.nth doesn't work!! *)
   let e = List.hd_exn !el in
-  let e_array = Array.create 15 e in
-  Array.set e_array 0 e;
-
+  let len = List.length !el in
+  let e_array = Array.create len e in
+  let e_ctr = ref 0 in
+  let add_e_array e = 
+    Array.set e_array !e_ctr e
+  in
+  List.iter (List.rev !el) add_e_array;
+  add_PRF_on_edges e_array.(0);
   (* add_PRF_on_edges e; *)
   (* List.iter !el add_PRF_on_edges; *)
   (* G.iter_edges (fun src dst -> add_PRF_on_edge src dst) g; *)
