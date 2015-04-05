@@ -36,15 +36,15 @@ let add_PRF g =
     
   let add_PRF_on_edge src dst = 
     Log.info "add_PRF_on_edge";
-    if !prf_ctr > 0 then  
-      let v = G.V.create Prf in
-      G.add_vertex g v;
-      G.remove_edge g src dst;
-      G.add_edge g src v;
-      G.add_edge g v dst;
-      prf_ctr := !prf_ctr - 1
-    else
-      ()
+    (* if !prf_ctr > 0 then   *)
+    let v = G.V.create Prf in
+    G.add_vertex g v;
+    G.remove_edge g src dst;
+    G.add_edge g src v;
+    G.add_edge g v dst
+    (*   prf_ctr := !prf_ctr - 1 *)
+    (* else *)
+    (*   () *)
   in
   let add_PRF_on_edges e = 
     add_PRF_on_edge (G.E.src e) (G.E.dst e)
@@ -56,13 +56,16 @@ let add_PRF g =
   let e_array = Array.create len e in
   let e_ctr = ref 0 in
   let add_e_array e = 
-    Array.set e_array !e_ctr e
+    Array.set e_array !e_ctr e;
+    e_ctr := !e_ctr + 1
   in
   List.iter (List.rev !el) add_e_array;
-  add_PRF_on_edges e_array.(0);
-  (* add_PRF_on_edges e; *)
-  (* List.iter !el add_PRF_on_edges; *)
-  (* G.iter_edges (fun src dst -> add_PRF_on_edge src dst) g; *)
+  let len = Array.length e_array in
+  for i = 0 to len - 1 do 
+     add_PRF_on_edges e_array.(i); 
+     ()
+  done;
+  Log.info "len = %d" len;
   Log.info "add_PRF"
 
 (* Set edge 'e' in 't' to have label 'label' *)
