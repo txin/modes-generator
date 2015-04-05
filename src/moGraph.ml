@@ -25,16 +25,16 @@ let string_of_e e =
 (* add PRFs on the edges of the base graphs *)
 
 let add_PRF g = 
-  let prf_cnt = ref 0 in
+  let prf_ctr = ref 0 in
   let add_PRF_on_edge src dst = 
     Log.info "add_PRF_on_edge";
-    if !prf_cnt = 0 then  
+    if !prf_ctr = 0 then  
       let v = G.V.create Prf in
       G.add_vertex g v;
       G.remove_edge g src dst;
       G.add_edge g src v;
       G.add_edge g v dst;
-      prf_cnt := !prf_cnt + 1
+      prf_ctr := !prf_ctr + 1;
     else
       ()
   in
@@ -157,7 +157,6 @@ let create init block =
   in
   
   List.iter init addV;
-
   (* add vertices from block*)
   List.iter block addV;
   List.iter !base_vl addV;
@@ -171,24 +170,13 @@ let create init block =
     let (src, dst) = tup in
     G.add_edge g va.(src) va.(dst)
   in
-  List.iter init_graph add_edge_tuple;
+
   List.iter base_graph_1 add_edge_tuple;
-
+  (* add PRF to the block*)
   add_PRF g; 
-  (* hardcoded test first *)
-
-  (* let v = G.V.create Prp in *)
-  (* G.add_vertex g v; *)
-  (* Array.set va !e_ctr v; *)
-  (* e_ctr := !e_ctr + 1; *)
-
-
-  (* G.remove_edge g va.(8) va.(9); *)
-  (* G.add_edge g va.(8) va.(10);  *)
-  (* G.add_edge g va.(10) va.(9);  *)
-  
+  List.iter init_graph add_edge_tuple;
   assign_families g;
-  (* validate g; *)
+  validate g;
   g
 
 (* display with dot file*)

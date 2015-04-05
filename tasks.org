@@ -2,13 +2,6 @@
 #+COLUMNS: %40ITEM(Task) %17Effort(Estimated Effort){:} %CLOCKSUM
 
 * Doing
-** TODO reconfigure graph
-CLOCK: [2015-04-05 Sun 01:50]--[2015-04-05 Sun 02:11] =>  0:21
-:PROPERTIES:
-:Effort:   1:00
-:END:
-- [ ] vertices list or array?
-- [ ] edge list ?
 ** TODO PRPs algorithms
 CLOCK: [2015-04-04 Sat 23:38]--[2015-04-05 Sun 00:06] =>  0:28
 CLOCK: [2015-04-03 Fri 22:20]--[2015-04-03 Fri 22:41] =>  0:21
@@ -83,6 +76,16 @@ CLOCK: [2015-04-03 Fri 22:20]--[2015-04-03 Fri 22:41] =>  0:21
 - label: input, output
   
 * Done
+** DONE reconfigure graph
+CLOSED: [2015-04-05 Sun 12:51]
+CLOCK: [2015-04-05 Sun 12:32]--[2015-04-05 Sun 12:50] =>  0:18
+CLOCK: [2015-04-05 Sun 01:50]--[2015-04-05 Sun 02:11] =>  0:21
+:PROPERTIES:
+:Effort:   1:00
+:END:
+- [X] add PRF into the block
+- [X] vertices list or array?
+- [X] edge list ?
 ** DONE valid -> secure
 - [X] SMT solver
 ** DONE assign families
