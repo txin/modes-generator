@@ -2,15 +2,17 @@ open Graph
 
 open Core.Std
 open MoOps
-module MoInst = MoInstructions
 
+module MoInst = MoInstructions
 module E = struct
     type t = Int.Set.t
     let compare = Int.Set.compare
     let default = Int.Set.empty
   end
 module V = struct type t = MoOps.instruction end
-module G = Graph.Imperative.Digraph.AbstractLabeled(V)(E)
+module G = Graph.Imperative.Digraph.AbstractLabeled(V)(E) 
+module G_P = Graph.Persistent.Digraph.AbstractLabeled(V)(E)
+
 
 module Topo = Topological.Make_stable(G)
 
@@ -22,6 +24,19 @@ let string_of_v v =
 let string_of_e e =
   let l = G.E.label e |> Int.Set.to_list in
   List.to_string Int.to_string l
+
+
+(* n chooses k combination *)
+let extract k list =
+  let rec aux k acc emit = function
+    | [] -> acc
+    | h :: t ->
+       if k = 1 then aux k (emit [h] acc) emit t else
+         let new_emit x = emit (h :: x) in
+         aux k (aux (k-1) acc new_emit t) emit t
+  in
+  let emit x acc = x :: acc in
+  aux k [] emit list
 
 (* iterate the edges of the graph *)
 (* add PRFs on the edges of the base graphs *)
@@ -53,20 +68,51 @@ let add_PRF g =
   (* List.nth doesn't work!! *)
   let e = List.hd_exn !el in
   let len = List.length !el in
-  let e_array = Array.create len e in
-  let e_ctr = ref 0 in
-  let add_e_array e = 
-    Array.set e_array !e_ctr e;
-    e_ctr := !e_ctr + 1
+
+  (* combination from a list *)
+  let temp_combi = extract 1 !el in
+  let get_inner_list_edges l = 
+    let e = List.hd_exn l in
+    Log.info "inner!!!!%s" (string_of_e e)
   in
-  List.iter (List.rev !el) add_e_array;
-  let len = Array.length e_array in
-  for i = 0 to len - 1 do 
-     add_PRF_on_edges e_array.(i); 
-     ()
-  done;
-  Log.info "len = %d" len;
+
+  (* create a persistent graph here, copy of the imperative graph *)
+  let g_p = G_P.empty in
+  let add_P_vertex v = 
+    let inst = MoOps.Instruction(G.V.label v) in
+    match inst with
+    (* originally for StackInstruction *)
+    |Instruction i ->
+      let v_p = G_P.V.create i in
+      G_P.add_vertex g_p v_p;
+      ();
+    |_ -> 
+      Log.info("Error: invalid instructions.");
+  in
+
+  G.iter_vertex (fun v -> add_P_vertex v) g;
+  (* G.iter_edges_e (fun e -> replace_edge g e Int.Set.empty) g *)
+
+
+  (* List.iter temp_combi get_inner_list_edges; *)
+  (* hd_exn always works, generic types, nth, tail doens't work?*)
+  let test_edge_list = List.hd_exn temp_combi in
+  List.iter test_edge_list add_PRF_on_edges;
   Log.info "add_PRF"
+  (* let e_array = Array.create len e in *)
+  (* let e_ctr = ref 0 in *)
+  (* let add_e_array e =  *)
+  (*   Array.set e_array !e_ctr e; *)
+  (*   e_ctr := !e_ctr + 1 *)
+  (* in *)
+  (* List.iter (List.rev !el) add_e_array; *)
+  (* let len = Array.length e_array in *)
+  (* for i = 0 to len - 1 do  *)
+  (*    add_PRF_on_edges e_array.(i);  *)
+  (*    () *)
+  (* done; *)
+  (* Log.info "len = %d" len; *)
+
 
 (* Set edge 'e' in 't' to have label 'label' *)
 let replace_edge g e label =
