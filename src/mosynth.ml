@@ -74,10 +74,9 @@ let _ =
 
   (* 'all' is a list of the instruction we are using *)
   let all = [
-    "DUP"; "INC"; "M"; "NEXTIV"; "OUT"; "PRF"; "PRP"; "XOR"; 
+    "DUP"; "INC"; "M"; "NEXTIV"; "OUT"; "PRF"; "PRP"; "XOR";
   ] in
   let all = instructions !arg_ops all in
   let init = MoInst.from_string_block (!arg_init) Init in
-  
   MoGeneration.gen init !arg_block_size all;
-
+  Generation.gen ();

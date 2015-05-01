@@ -1,5 +1,4 @@
 open Graph
-
 open Core.Std
 open MoOps
 
@@ -11,11 +10,8 @@ module E = struct
   end
 module V = struct type t = MoOps.instruction end
 module G = Graph.Imperative.Digraph.AbstractLabeled(V)(E) 
-module G_P = Graph.Persistent.Digraph.AbstractLabeled(V)(E)
-
 
 module Topo = Topological.Make_stable(G)
-
 type t = { g : G.t; e : G.E.t list}
 
 let string_of_v v =
@@ -76,43 +72,12 @@ let add_PRF g =
     Log.info "inner!!!!%s" (string_of_e e)
   in
 
-  (* create a persistent graph here, copy of the imperative graph *)
-  let g_p = G_P.empty in
-  let add_P_vertex v = 
-    let inst = MoOps.Instruction(G.V.label v) in
-    match inst with
-    (* originally for StackInstruction *)
-    |Instruction i ->
-      let v_p = G_P.V.create i in
-      G_P.add_vertex g_p v_p;
-      ();
-    |_ -> 
-      Log.info("Error: invalid instructions.");
-  in
-
-  G.iter_vertex (fun v -> add_P_vertex v) g;
   (* G.iter_edges_e (fun e -> replace_edge g e Int.Set.empty) g *)
-
-
   (* List.iter temp_combi get_inner_list_edges; *)
   (* hd_exn always works, generic types, nth, tail doens't work?*)
   let test_edge_list = List.hd_exn temp_combi in
   List.iter test_edge_list add_PRF_on_edges;
   Log.info "add_PRF"
-  (* let e_array = Array.create len e in *)
-  (* let e_ctr = ref 0 in *)
-  (* let add_e_array e =  *)
-  (*   Array.set e_array !e_ctr e; *)
-  (*   e_ctr := !e_ctr + 1 *)
-  (* in *)
-  (* List.iter (List.rev !el) add_e_array; *)
-  (* let len = Array.length e_array in *)
-  (* for i = 0 to len - 1 do  *)
-  (*    add_PRF_on_edges e_array.(i);  *)
-  (*    () *)
-  (* done; *)
-  (* Log.info "len = %d" len; *)
-
 
 (* Set edge 'e' in 't' to have label 'label' *)
 let replace_edge g e label =
@@ -121,7 +86,6 @@ let replace_edge g e label =
   G.add_edge_e g e
 
 (* first set up the edge be the first element of the list *)
-
 (* global variable to save family counter *)
 let fam_cnt = ref 1
 
@@ -248,7 +212,7 @@ let create init block =
   List.iter init_graph add_edge_tuple;
   assign_families g;
 
-  (* validate g; *)
+  validate g;
   (* TODO: think about the return values *)
   g
 
@@ -282,3 +246,8 @@ let display_with_feh g =
   Out_channel.close oc;
   ignore (Sys.command ("dot -Tpng " ^ tmp ^ " | feh -"));
   Sys.remove tmp
+
+type dir = Forward | Backward
+let string_of_dir = function
+  | Forward -> "Forward"
+  | Backward -> "Backward"
