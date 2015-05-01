@@ -1,21 +1,22 @@
 open Graph
 open Core.Std
-open MoOps
 
+open MoOps
 module MoInst = MoInstructions
+
 module E = struct
     type t = Int.Set.t
     let compare = Int.Set.compare
     let default = Int.Set.empty
   end
+
 module V = struct type t = MoOps.instruction end
 module G = Graph.Imperative.Digraph.AbstractLabeled(V)(E) 
-
 module Topo = Topological.Make_stable(G)
 type t = { g : G.t; e : G.E.t list}
 
 let string_of_v v =
-  MoInst.string_of_t (Instruction (G.V.label v))
+  MoInst.string_of_t (Instruction(G.V.label v))
 
 let string_of_e e =
   let l = G.E.label e |> Int.Set.to_list in
@@ -33,51 +34,6 @@ let extract k list =
   in
   let emit x acc = x :: acc in
   aux k [] emit list
-
-(* iterate the edges of the graph *)
-(* add PRFs on the edges of the base graphs *)
-let add_PRF g = 
-  (* number of prf *)
-  let prf_ctr = ref 3 in
-  let el = ref [] in
-  let save_edges e = 
-    (* Log.info "%s" (string_of_e e); *)
-    el := List.append !el [e];
-  in
-    
-  let add_PRF_on_edge src dst = 
-    Log.info "add_PRF_on_edge";
-    (* if !prf_ctr > 0 then   *)
-    let v = G.V.create Prf in
-    G.add_vertex g v;
-    G.remove_edge g src dst;
-    G.add_edge g src v;
-    G.add_edge g v dst
-    (*   prf_ctr := !prf_ctr - 1 *)
-    (* else *)
-    (*   () *)
-  in
-  let add_PRF_on_edges e = 
-    add_PRF_on_edge (G.E.src e) (G.E.dst e)
-  in
-  G.iter_edges_e (fun e -> save_edges e) g;
-  (* List.nth doesn't work!! *)
-  let e = List.hd_exn !el in
-  let len = List.length !el in
-
-  (* combination from a list *)
-  let temp_combi = extract 1 !el in
-  let get_inner_list_edges l = 
-    let e = List.hd_exn l in
-    Log.info "inner!!!!%s" (string_of_e e)
-  in
-
-  (* G.iter_edges_e (fun e -> replace_edge g e Int.Set.empty) g *)
-  (* List.iter temp_combi get_inner_list_edges; *)
-  (* hd_exn always works, generic types, nth, tail doens't work?*)
-  let test_edge_list = List.hd_exn temp_combi in
-  List.iter test_edge_list add_PRF_on_edges;
-  Log.info "add_PRF"
 
 (* Set edge 'e' in 't' to have label 'label' *)
 let replace_edge g e label =
@@ -142,7 +98,7 @@ let validate g =
   Log.info "Validating graph...";
   let smt = MoSmt.create () in
   let f v =
-    Log.debug "  Hit %s" ((MoOps.Instruction (G.V.label v)) |> MoInst.string_of_t);
+    Log.debug "  Hit %s" ((MoOps.Instruction(G.V.label v)) |> MoInst.string_of_t);
     MoSmt.op smt (G.V.label v) in
  
   (* Topological iterator only supports functor with unit as return value *)
@@ -154,7 +110,7 @@ let validate g =
   (* convert Topological iterator to a list *)
   Topo.iter (fun v -> add_v_list v) g;
   
-  List.iter !v_list f; 
+  List.iter !v_list f;
   MoSmt.finalize smt;
   let fname = Filename.temp_file "z3" ".smt2" in
   MoSmt.write_to_file smt fname;
@@ -163,58 +119,56 @@ let validate g =
   Log.info " %b" result;
   result
 
-(* keep a separate edge list and vertex list *)
-let create init block =
-  (* keep a ctr for the vertex *)
-  (* old API create, newer: make*)
-  (* use 7 ops first *)
-  let e_ctr = ref 0 in
+
+(* pass the vertex array from generation.ml *)
+let create n_src block_v block_e =
+  let g = G.create() in
   let v = G.V.create Start in
   
-  (* use INIT(4) + BLOCK(7) first *)
-  let va = Array.create 11 v in
+  let block_len = Array.length block_v in
+  (* calculate from the block length and number of INIT for the START vertices *)
+  let v_a = Array.create (block_len + 4 * (n_src - 1)) v in
 
-  let base_vl = ref[Instruction Xor; Instruction Dup] in
-  (* concatenate doesn't work so far *)
-  (* base_vl := block :: !base_vl; *)
-  let g = G.create() in  
-  let addV inst =
+  let v_ctr = ref 0 in
+  let addV inst_str phase =
+    Log.debug "%s" inst_str;
+    let inst = MoInst.from_string inst_str phase in
     match inst with
-    |Instruction i ->
-      let v = G.V.create i in
-      G.add_vertex g v;
-      Array.set va !e_ctr v;
-      e_ctr := !e_ctr + 1;
-    |_ -> 
-      Log.info("Error: invalid instructions.");
+    | Instruction i ->
+       let v = G.V.create i in
+       G.add_vertex g v;
+       v_a.(!v_ctr) <-  v;
+       v_ctr := !v_ctr + 1;
+    | _ -> failwith "Error: instruction is not valid"
   in
-  
-  List.iter init addV;
-  (* add vertices from block*)
-  List.iter block addV;
-  List.iter !base_vl addV;
+  Array.iter block_v (fun e -> addV e Block);  
+  let init = ["GENRAND"; "DUP"; "OUT"; "NEXTIV"] in
 
   (* a list of tuples to represent the edges*)
   (* last tuple connects Init and Block *)
-  let init_graph = [(0, 1); (1, 2); (1, 3); (3, 4)] in
-  let base_graph_1 = [(4,8); (5,8); (8,9); (9,6); (9,7)] in
-
+  let init_e = [(0, 1); (1, 2); (1, 3)] in
   let add_edge_tuple tup =
     let (src, dst) = tup in
-    G.add_edge g va.(src) va.(dst)
+    G.add_edge g v_a.(src) v_a.(dst)
   in
-
-  List.iter base_graph_1 add_edge_tuple;
-  (* add PRF to the block*)
-  add_PRF g; 
-  (* Here generate a list of candidates *)
-
-  List.iter init_graph add_edge_tuple;
+  
+  (* add n_src - 2 initialised vectors *)
+  for i = 0 to n_src - 2 do
+    List.iter init (fun e -> addV e Init);
+    let tmp_len = 4 * i + block_len in
+    let init_connection = List.map init_e
+                                   (fun (x, y) -> (x + tmp_len, y + tmp_len)) in
+    List.iter init_connection add_edge_tuple;
+    (* connect to the block *)
+    G.add_edge g v_a.(tmp_len + 3) v_a.(i);
+  done;
+  
+  List.iter block_e add_edge_tuple;
   assign_families g;
-
   validate g;
-  (* TODO: think about the return values *)
   g
+;;
+
 
 (* display with dot file*)
 let display_with_feh g =
@@ -251,3 +205,5 @@ type dir = Forward | Backward
 let string_of_dir = function
   | Forward -> "Forward"
   | Backward -> "Backward"
+
+

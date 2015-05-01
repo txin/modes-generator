@@ -1,4 +1,3 @@
-
 type phase = Init | Block
 
 type instruction =

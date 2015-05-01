@@ -99,13 +99,13 @@ let add_PRF edge_l =
     match l with
     | [] -> acc
     | (src, dst) :: xs ->
-       add_PRF_inner ((src, idx) :: (idx, dst) :: acc) (idx + 1) xs;
+       let acc_n = List.filter acc (fun x -> x <> (src, dst)) in
+       add_PRF_inner ((src, idx) :: (idx, dst) :: acc_n) (idx + 1) xs;
   in
   let new_l = List.map (extract n_prf edge_l) (fun e -> add_PRF_inner edge_l (2*n_src + 2*n_xor) e) in
-  List.iter new_l (fun e -> Log.debug "%s" (str_of_tuple_l e));
+  (* List.iter new_l (fun e -> Log.debug "%s" (str_of_tuple_l e)); *)
   (* Log.debug "%s" (str_of_tuple_l !edges_PRF); *)
-    (* TODO: check the security/decryptability *)
-  ()
+  List.hd_exn new_l
 ;;
 
 (* difference beween two lists *)
@@ -279,7 +279,7 @@ let str_of_array a =
 (* generate vertices based on #src and #XOR *)
 (* string list *)
 let gen_vertices () =
-  let str_a = [|"IN"; "OUT"; "XOR"; "DUP"; "PRF"|] in
+  let str_a = [|"START"; "NEXTIV"; "XOR"; "DUP"; "PRP"|] in
   let n_a = [|n_src; n_src; n_xor; n_xor; n_prf|] in
 
   let add_to_v_a str start_i end_i  =
@@ -292,14 +292,14 @@ let gen_vertices () =
   for i = 0 to Array.length str_a - 1 do
     add_to_v_a str_a.(i) !idx (!idx + n_a.(i) - 1);
     idx := !idx + n_a.(i);
-  done
+  done;
+  v_a.(n_src - 1) <- "M";
+  v_a.(n_src) <- "OUT"
+
 ;;
 
+let gen_candidate () = 
 
-let gen () =
-  (* Log.set_log_level Log.DEBUG; *)
-  (* Log.set_output stdout; *)
-  (* Log.color_on(); *)
   let dup_list = gen_list "D" n_xor in
   let xor_list = gen_list "X" n_xor in
   let xor_dup_list = List.append dup_list xor_list in
@@ -332,7 +332,7 @@ let gen () =
   (* let log_list_list l =  *)
   (*     Log.debug "%s" (str_of_list_list l) in *)
   (* List.iter seq_list log_list_list; *)
-  gen_vertices ();
+
   (* 15: [XOR]; [DUP]; [XOR]; [DUP] *)
   (*  0: [DUP]; [DUP]; [XOR]; [XOR] *)
   (*  3: [DUP; DUP]; [XOR]; [XOR] *)
@@ -347,5 +347,19 @@ let gen () =
   let edge_list = List.dedup !edge_all_list in
   let filtered_list = List.filter edge_list (fun x -> not (List.contains_dup x)) in
   add_PRF (List.hd_exn filtered_list)
-  (* List.iter filtered_list (fun e -> Log.debug "%s" (str_of_tuple_l e)) *)
+;;
+
+(* Pass the INIT block from mosynth.ml, and instructions *)
+let gen init insts =
+  (* save the secure blocks *)
+  (* let blocks = ref []  *)
+
+  let candidate = gen_candidate () in
+  Log.debug "candidate: %s" (str_of_tuple_l candidate);
+  (* create vertices first *)
+  (* TODO: replace ops *)
+  gen_vertices ();
+  let g = MoGraph.create n_src v_a candidate in
+  MoGraph.display_with_feh g;
+                 
 ;;

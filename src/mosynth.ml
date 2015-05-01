@@ -78,5 +78,6 @@ let _ =
   ] in
   let all = instructions !arg_ops all in
   let init = MoInst.from_string_block (!arg_init) Init in
-  MoGeneration.gen init !arg_block_size all;
-  Generation.gen ();
+  (* MoGeneration.gen init !arg_block_size all; *)
+  (* First fix the size *)
+  Generation.gen init all;
