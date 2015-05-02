@@ -3,9 +3,10 @@ open Core.Std;;
 
 (* number of sources = number of sinks*)
 (* TODO: 4, 3 stuck *)
-let n_src = 3 
-let n_xor = 2 
-let n_prf = 2 
+(* TODO: 3, 2, 2*)
+let n_src = 2 
+let n_xor = 1 
+let n_prf = 1 
 
 let v_a = Array.create (2 * n_src + 2 * n_xor + n_prf) "" 
 (* TODO: not used for now *)
@@ -357,9 +358,11 @@ let gen init insts =
   let candidate = gen_candidate () in
   Log.debug "candidate: %s" (str_of_tuple_l candidate);
   (* create vertices first *)
-  (* TODO: replace ops *)
   gen_vertices ();
-  let g = MoGraph.create n_src v_a candidate in
+  (* create a CBC to check *)
+  let cbc_e = [(0, 4); (1, 4); (4, 6); (6, 5); (5, 2); (5, 3)] in
+  let g = MoGraph.create n_src v_a cbc_e in
+  MoGraph.is_decryptable g;
+  MoGraph.validate g;
   MoGraph.display_with_feh g;
-                 
 ;;

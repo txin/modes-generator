@@ -1,6 +1,5 @@
 open Graph
 open Core.Std
-
 open MoOps
 module MoInst = MoInstructions
 
@@ -13,7 +12,17 @@ module E = struct
 module V = struct type t = MoOps.instruction end
 module G = Graph.Imperative.Digraph.AbstractLabeled(V)(E) 
 module Topo = Topological.Make_stable(G)
-type t = { g : G.t; e : G.E.t list}
+
+module PathWeight = struct
+  type edge = G.E.t
+  type t = int
+  let weight x = 0
+  let zero = 0
+  let add = (+)
+  let compare = compare
+end
+
+type t = {g : G.t; v : G.V.t array; n_src: int} 
 
 let string_of_v v =
   MoInst.string_of_t (Instruction(G.V.label v))
@@ -21,7 +30,6 @@ let string_of_v v =
 let string_of_e e =
   let l = G.E.label e |> Int.Set.to_list in
   List.to_string Int.to_string l
-
 
 (* n chooses k combination *)
 let extract k list =
@@ -94,13 +102,12 @@ let assign_families g =
   Topo.iter (fun v -> match_label g v) g
 
 (* validate with SMT solver *)
-let validate g =
+let validate t =
   Log.info "Validating graph...";
   let smt = MoSmt.create () in
   let f v =
     Log.debug "  Hit %s" ((MoOps.Instruction(G.V.label v)) |> MoInst.string_of_t);
     MoSmt.op smt (G.V.label v) in
- 
   (* Topological iterator only supports functor with unit as return value *)
   (* concatenate the list*)
   let v_list = ref [] in
@@ -108,7 +115,7 @@ let validate g =
     v_list := List.append !v_list [v];
     () in
   (* convert Topological iterator to a list *)
-  Topo.iter (fun v -> add_v_list v) g;
+  Topo.iter (fun v -> add_v_list v) t.g;
   
   List.iter !v_list f;
   MoSmt.finalize smt;
@@ -118,7 +125,6 @@ let validate g =
   Sys.remove fname;
   Log.info " %b" result;
   result
-
 
 (* pass the vertex array from generation.ml *)
 let create n_src block_v block_e =
@@ -165,13 +171,11 @@ let create n_src block_v block_e =
   
   List.iter block_e add_edge_tuple;
   assign_families g;
-  validate g;
-  g
-;;
-
+  let t = {g = g; v = v_a; n_src = n_src} in
+  t
 
 (* display with dot file*)
-let display_with_feh g =
+let display_with_feh t =
   let module Display = struct
       include G
       let ctr = ref 1
@@ -194,9 +198,9 @@ let display_with_feh g =
     end in
   let module Dot = Graph.Graphviz.Dot(Display) in
   let tmp = Filename.temp_file "mode" ".dot" in
-  G.Mark.clear g;
+  G.Mark.clear t.g;
   let oc = Out_channel.create tmp in
-  Dot.output_graph oc g;
+  Dot.output_graph oc t.g;
   Out_channel.close oc;
   ignore (Sys.command ("dot -Tpng " ^ tmp ^ " | feh -"));
   Sys.remove tmp
@@ -206,4 +210,18 @@ let string_of_dir = function
   | Forward -> "Forward"
   | Backward -> "Backward"
 
-
+(* Checks whether a graph is decryptable *)
+let is_decryptable t =
+  Log.debug "Checking decryptability...";
+  let m_idx = t.n_src - 1 in
+  let m_v = t.v.(m_idx) in
+  let out_idx = 2 * t.n_src - 2 in
+  let out_v = t.v.(out_idx) in
+  let module Dij = Path.Dijkstra(G)(PathWeight) in
+  Dij.shortest_path t.g m_v out_v;
+  let module P_check = Path.Check(G) in
+  let path_checker = P_check.create t.g in
+  let result = P_check.check_path path_checker m_v out_v in
+  Log.debug "path:%B" result;
+  (* let module p_check = Path.Check PathCheck in *)
+  (* p_check.create t.g *)
