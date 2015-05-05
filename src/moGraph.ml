@@ -92,8 +92,9 @@ let match_label g v =
     ()
 
 (* Clear labels on all edges in 't' *)
-let clear g =
-  G.iter_edges_e (fun e -> replace_edge g e Int.Set.empty) g
+let clear t =
+  G.iter_edges_e (fun e -> replace_edge t.g e Int.Set.empty) t.g;
+  fam_cnt := 1
 
 (* assign_families using toplogical sort *)
 let assign_families g = 
@@ -116,7 +117,6 @@ let validate t =
     () in
   (* convert Topological iterator to a list *)
   Topo.iter (fun v -> add_v_list v) t.g;
-  
   List.iter !v_list f;
   MoSmt.finalize smt;
   let fname = Filename.temp_file "z3" ".smt2" in
@@ -217,11 +217,10 @@ let is_decryptable t =
   let m_v = t.v.(m_idx) in
   let out_idx = 2 * t.n_src - 2 in
   let out_v = t.v.(out_idx) in
-  let module Dij = Path.Dijkstra(G)(PathWeight) in
-  Dij.shortest_path t.g m_v out_v;
   let module P_check = Path.Check(G) in
   let path_checker = P_check.create t.g in
   let result = P_check.check_path path_checker m_v out_v in
   Log.debug "path:%B" result;
+  result
   (* let module p_check = Path.Check PathCheck in *)
   (* p_check.create t.g *)

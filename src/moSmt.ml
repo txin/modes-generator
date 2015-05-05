@@ -245,6 +245,6 @@ let run fname =
   match List.hd_exn (String.split s ~on:'\n') with
   | "sat" -> true
   | "unsat" -> false
-  | _ -> raise (Failure ("Fatal: unknown Z3 error: " ^ s))
+  | _ -> false (* raise (Failure ("Fatal: unknown Z3 error: " ^ s)) *)
 
 

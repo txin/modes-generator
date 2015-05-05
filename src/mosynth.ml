@@ -37,7 +37,7 @@ let _ =
   let arg_all = ref false in
   let arg_block_size = ref 7 in
   let arg_decryptable_count = ref false in
-  let arg_debug = ref 4 in
+  let arg_debug = ref 0 in
   let arg_disable_pruning = ref false in
   let arg_init = ref "GENRAND DUP OUT NEXTIV" in
   let arg_keep_dups = ref false in
@@ -79,5 +79,5 @@ let _ =
   let all = instructions !arg_ops all in
   let init = MoInst.from_string_block (!arg_init) Init in
   (* MoGeneration.gen init !arg_block_size all; *)
-  (* First fix the size *)
   Generation.gen init all;
+  (* Generation.test init all; *)

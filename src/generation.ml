@@ -4,13 +4,9 @@ open Core.Std;;
 (* number of sources = number of sinks*)
 (* TODO: 4, 3 stuck *)
 (* TODO: 3, 2, 2*)
-let n_src = 2 
-let n_xor = 1 
-let n_prf = 1 
-
-let v_a = Array.create (2 * n_src + 2 * n_xor + n_prf) "" 
-(* TODO: not used for now *)
-let e_a = Array.create (n_src + 3 * n_xor + n_prf) "" 
+let n_src = ref 3 
+let n_xor = ref 2 
+let n_prf = ref 1
 
 let extract k list =
   let rec aux k acc emit = function
@@ -22,7 +18,6 @@ let extract k list =
   in
   let emit x acc = x :: acc in
   aux k [] emit list
-;;
 
 let str_of_level l =
   (* List.fold_left (fun acc x ->) *)
@@ -33,7 +28,6 @@ let str_of_level l =
   in
   List.iter l add_str;
   !str_all
-;;
 
 let str_of_tuple_l l =
   let str_all = ref "" in
@@ -43,7 +37,15 @@ let str_of_tuple_l l =
   in
   List.iter l add_str;
   !str_all
-;;
+
+let str_op_of_tuple_l l v =
+  let str_all = ref "" in
+  let add_str (src, dst) =
+    str_all := !str_all ^ " (" ^v.(src)^(Int.to_string src) ^","^ v.(dst) ^ (Int.to_string dst) ^") " ;
+    ();
+  in
+  List.iter l add_str;
+  !str_all
 
 let str_of_list l =
   let str_all = ref "[" in
@@ -54,8 +56,6 @@ let str_of_list l =
   List.iter l add_str;
   str_all := !str_all ^ " ]";
   !str_all
-;;
-
 
 let str_of_list_list l =
   let str_all = ref "" in
@@ -65,14 +65,12 @@ let str_of_list_list l =
   in
   List.iter l add_str;
   !str_all
-;;
 
 let rec gen_list elem len =
   if len = 0 then
     []
   else
     elem :: (gen_list elem (len - 1))
-;;
                    
 let permutations lst =
     let lstar = Array.of_list lst in
@@ -90,12 +88,11 @@ let permutations lst =
         if v > 0 then None else Some res
     in
     Stream.from perm
-;;
 
 (* (\* candidate modes *\) *)
 (* (\* place PRF on the edges *\) *)
 let add_PRF edge_l =
-  (* let idx = ref (2 * n_src + 2 * n_xor) in *)
+  (* let idx = ref (2 * !n_src + 2 * !n_xor) in *)
     let rec add_PRF_inner acc idx l =
     match l with
     | [] -> acc
@@ -103,15 +100,14 @@ let add_PRF edge_l =
        let acc_n = List.filter acc (fun x -> x <> (src, dst)) in
        add_PRF_inner ((src, idx) :: (idx, dst) :: acc_n) (idx + 1) xs;
   in
-  let new_l = List.map (extract n_prf edge_l) (fun e -> add_PRF_inner edge_l (2*n_src + 2*n_xor) e) in
+  List.map (extract !n_prf edge_l) (fun e -> add_PRF_inner edge_l (2 * (!n_src) + 2 * (!n_xor)) e) 
   (* List.iter new_l (fun e -> Log.debug "%s" (str_of_tuple_l e)); *)
   (* Log.debug "%s" (str_of_tuple_l !edges_PRF); *)
-  List.hd_exn new_l
-;;
+
 
 (* difference beween two lists *)
 let diff l1 l2 = List.filter l1 (fun x -> not (List.mem l2 x))
-;;
+
 (* level_l, permutations ledges is for *)
 (* TODO: extract 2, or permute hashtable to look up *)
 let edge_all_list = ref[] 
@@ -181,7 +177,6 @@ let gen_edge_list level_l =
   | x :: y :: ys -> connect [] [] x y ys;
   | _ -> ()
 
-;;
 
 
 (* in_deg: available srcs from the upper level *)
@@ -199,10 +194,10 @@ let gen_base_graph seq =
     done;
     List.rev !in_l;
   in
-  level_l := (gen_l "IN" 0 (n_src - 1)) :: !level_l;
+  level_l := (gen_l "IN" 0 (!n_src - 1)) :: !level_l;
 
-  let idx_XOR = ref (2 * n_src) in
-  let idx_DUP = ref (!idx_XOR + n_xor) in
+  let idx_XOR = ref (2 * !n_src) in
+  let idx_DUP = ref (!idx_XOR + !n_xor) in
 
   (* create tuples for the level, seq is a list of list *)
   let create_level seq_l =
@@ -228,9 +223,8 @@ let gen_base_graph seq =
   create_level seq;
   (* Log.debug "%s" (str_of_level (create_level seq)); *)
   (* List.iter seq create_level; *)
-  level_l := (gen_l "OUT" ) n_src (2 * n_src - 1) :: !level_l;
+  level_l := (gen_l "OUT" ) !n_src (2 * !n_src - 1) :: !level_l;
   List.rev !level_l
-;;
 
 let gen_level l =
   let acc_list = ref[] in
@@ -263,9 +257,9 @@ let gen_level l =
     else
       ();
   in
-  level [] n_src l;
+  level [] !n_src l;
   !acc_list
-;;
+
 
 let str_of_array a =
   let str_all = ref "" in
@@ -275,13 +269,13 @@ let str_of_array a =
   in
   Array.iter a add_str;
   !str_all
-;;
+
 
 (* generate vertices based on #src and #XOR *)
 (* string list *)
-let gen_vertices () =
+let gen_vertices v_a =
   let str_a = [|"START"; "NEXTIV"; "XOR"; "DUP"; "PRP"|] in
-  let n_a = [|n_src; n_src; n_xor; n_xor; n_prf|] in
+  let n_a = [|!n_src; !n_src; !n_xor; !n_xor; !n_prf|] in
 
   let add_to_v_a str start_i end_i  =
     for i = start_i to end_i do
@@ -294,15 +288,14 @@ let gen_vertices () =
     add_to_v_a str_a.(i) !idx (!idx + n_a.(i) - 1);
     idx := !idx + n_a.(i);
   done;
-  v_a.(n_src - 1) <- "M";
-  v_a.(n_src) <- "OUT"
+  v_a.(!n_src - 1) <- "M";
+  v_a.(!n_src) <- "OUT"
 
-;;
 
 let gen_candidate () = 
 
-  let dup_list = gen_list "D" n_xor in
-  let xor_list = gen_list "X" n_xor in
+  let dup_list = gen_list "D" !n_xor in
+  let xor_list = gen_list "X" !n_xor in
   let xor_dup_list = List.append dup_list xor_list in
   let perm_stream = permutations xor_dup_list in
   let perm_l = ref [] in
@@ -328,9 +321,7 @@ let gen_candidate () =
     |_ -> acc
   in
   let seq_list = gen_seq [] seq in
-
-  (* let seq_list = gen_seq [] seq in *)
-  (* let log_list_list l =  *)
+  (* let log_list_list l = *)
   (*     Log.debug "%s" (str_of_list_list l) in *)
   (* List.iter seq_list log_list_list; *)
 
@@ -340,29 +331,88 @@ let gen_candidate () =
   (* 17: [DUP; XOR]; [XOR]; [DUP] *)
   let graph_l_l = ref[] in
   List.iter seq_list (fun e -> graph_l_l := (gen_base_graph e) :: !graph_l_l);
-  (* let log_level l =  *)
-  (*   Log.debug "%s" (str_of_level l) in *)
-  (* List.iter graph_l log_level; *)
   List.iter !graph_l_l (fun e -> gen_edge_list e);
   (* eliminate the duplicates *)
   let edge_list = List.dedup !edge_all_list in
   let filtered_list = List.filter edge_list (fun x -> not (List.contains_dup x)) in
-  add_PRF (List.hd_exn filtered_list)
-;;
+  (* List.iter filtered_list (fun e -> Log.debug "base: %s" (str_of_tuple_l e)); *)
+  Printf.printf "base graph: %d" (List.length filtered_list);
+  let all_candidate = List.map filtered_list add_PRF in
+  List.dedup (List.join all_candidate)
+           
 
 (* Pass the INIT block from mosynth.ml, and instructions *)
 let gen init insts =
   (* save the secure blocks *)
-  (* let blocks = ref []  *)
-
+  
+  let v_a = Array.create (2 * !n_src + 2 * !n_xor + !n_prf) ""  in
   let candidate = gen_candidate () in
-  Log.debug "candidate: %s" (str_of_tuple_l candidate);
+  Printf.printf "candidate number= %d" (List.length candidate);
+  (* List.iter candidate (fun e -> Log.debug "candidate: %s" (str_of_tuple_l e)); *)
+  gen_vertices v_a;
+
+  let secure_blocks = ref [] in
+  let dec_blocks = ref [] in
+
+  let secure_check l =
+    Log.debug "%s" (str_of_tuple_l l);
+    let g = MoGraph.create !n_src v_a l in
+    let is_secure = MoGraph.validate g in
+    match is_secure with
+    | true -> secure_blocks := l :: !secure_blocks;
+              if MoGraph.is_decryptable g then
+                dec_blocks := l :: !dec_blocks
+              else
+                ();
+              MoGraph.clear g
+    | false -> MoGraph.clear g
+  in
+ 
+  let rec secure_check_limit ctr l =
+    match ctr < 74 with
+    | true -> begin
+        match l with
+        | [] -> ()
+        | x :: xs -> begin
+            let g = MoGraph.create !n_src v_a x in
+            let is_secure = MoGraph.validate g in
+            match is_secure with
+            | true -> secure_blocks := x :: !secure_blocks;
+                      if MoGraph.is_decryptable g then 
+                        begin
+                          dec_blocks := x :: !dec_blocks;
+                          MoGraph.clear g;
+                          secure_check_limit (ctr + 1) xs
+                        end
+                      else begin
+                          MoGraph.clear g;
+                          secure_check_limit ctr xs
+                        end
+            | false ->  begin 
+                MoGraph.clear g;
+                secure_check_limit ctr xs; 
+              end
+
+          end
+      end
+    | false -> ()         
+  in
+  
+  secure_check_limit 0 candidate;
+  (* List.nth_exn candidate 0 |> secure_check; *)
+  (* List.iter candidate secure_check; *)
+  Printf.printf "secure number= %d\n" (List.length !secure_blocks);
+  Printf.printf "decrytable number= %d\n" (List.length !dec_blocks);
+  (* List.iter !dec_blocks (fun e -> Printf.printf "%s\n" (str_of_tuple_l e)) *)
+  (* Printf.printf "%s\n" (str_op_of_tuple_l (List.nth_exn !dec_blocks 2) v_a); *)
+  (* Printf.printf "%s\n" (str_op_of_tuple_l (List.nth_exn !dec_blocks 11) v_a); *)
+  (* Printf.printf "%s\n" (str_op_of_tuple_l (List.nth_exn !dec_blocks 73) v_a); *)
+  (* List.iter candidate (fun e -> Log.debug "candidate: %s" (str_of_tuple_l e)); *)
   (* create vertices first *)
-  gen_vertices ();
-  (* create a CBC to check *)
-  let cbc_e = [(0, 4); (1, 4); (4, 6); (6, 5); (5, 2); (5, 3)] in
-  let g = MoGraph.create n_src v_a cbc_e in
+  (* gen_vertices (); *)
+  (* (\* (\\* create a CBC to check *\\) *\) *)
+  (* (\* let cbc_e = [(0, 4); (1, 4); (4, 6); (6, 5); (5, 2); (5, 3)] in *\) *)
+  let g = MoGraph.create !n_src v_a (List.nth_exn !dec_blocks 2) in
   MoGraph.is_decryptable g;
   MoGraph.validate g;
   MoGraph.display_with_feh g;
-;;
