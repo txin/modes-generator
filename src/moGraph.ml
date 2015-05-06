@@ -13,7 +13,7 @@ module V = struct type t = MoOps.instruction end
 module G = Graph.Imperative.Digraph.AbstractLabeled(V)(E) 
 module Topo = Topological.Make_stable(G)
 
-type t = {g : G.t; v : G.V.t array; n_src: int} 
+type t = {g : G.t; v : G.V.t array; v_sorted : G.V.t array; n_src: int} 
 
 let string_of_v v =
   MoInst.string_of_t (Instruction(G.V.label v))
@@ -91,7 +91,7 @@ let clear t =
 let assign_families t = 
   Log.info("assign_families");
   clear t;
-  Array.iter t.v (fun e -> match_label t.g e)
+  Array.iter t.v_sorted (fun e -> match_label t.g e)
 
 (* validate with SMT solver *)
 let validate t =
@@ -101,7 +101,7 @@ let validate t =
     Log.debug "  Hit %s" ((MoOps.Instruction(G.V.label v)) |> MoInst.string_of_t);
     MoSmt.op smt (G.V.label v) in
 
-  Array.iter t.v f;
+  Array.iter t.v_sorted f;
   MoSmt.finalize smt;
   let fname = Filename.temp_file "z3" ".smt2" in
   MoSmt.write_to_file smt fname;
@@ -158,7 +158,7 @@ let create n_src block_v block_e =
     ctr := !ctr + 1
   in
   Topo.iter (fun e -> add_to_v_a_sorted e) g;
-  let t = {g = g; v = v_a_sorted; n_src = n_src} in
+  let t = {g = g; v = v_a; v_sorted = v_a_sorted; n_src = n_src} in
   assign_families t;
   t
 
@@ -210,5 +210,4 @@ let is_decryptable t =
   let result = P_check.check_path path_checker m_v out_v in
   Log.debug "path:%B" result;
   result
-  (* let module p_check = Path.Check PathCheck in *)
-  (* p_check.create t.g *)
+

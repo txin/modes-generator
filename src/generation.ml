@@ -1,5 +1,5 @@
 open Log
-open Core.Std;;
+open Core.Std
 
 type t = {n_src: int; n_xor: int; n_prf: int}
 
@@ -320,17 +320,18 @@ let gen_candidate t =
   let edge_list = List.dedup !edge_all_list in
   let filtered_list = List.filter edge_list (fun x -> not (List.contains_dup x)) in
   (* List.iter filtered_list (fun e -> Log.debug "base: %s" (str_of_tuple_l e)); *)
-  Printf.printf "base graph: %d" (List.length filtered_list);
+  Printf.printf "base graph=%d " (List.length filtered_list);
   let all_candidate = List.map filtered_list (fun e -> add_PRF e t) in
   List.dedup (List.join all_candidate)
 
 (* Pass the INIT block from mosynth.ml, and instructions *)
 let gen n_src n_xor n_prf init insts =
   (* save the secure blocks *)
+  Printf.printf "n_src=%d, n_xor=%d, n_prf=%d\n" n_src n_xor n_prf;
   let t = {n_src=n_src; n_xor=n_xor; n_prf=n_prf} in
   let v_a = Array.create (2 * n_src + 2 * n_xor + n_prf) ""  in
   let candidate = gen_candidate t in
-  Printf.printf "candidate number= %d" (List.length candidate);
+  Printf.printf "candidate=%d " (List.length candidate);
   gen_vertices v_a t;
 
   let secure_blocks = ref [] in
@@ -345,7 +346,7 @@ let gen n_src n_xor n_prf init insts =
               if MoGraph.validate g then
                 secure_blocks := l :: !secure_blocks
               else
-                ();
+                ()
     | false -> ()
   in
  
@@ -379,8 +380,14 @@ let gen n_src n_xor n_prf init insts =
   (* secure_check_limit 0 candidate; *)
   (* List.nth_exn candidate 0 |> secure_check; *)
   List.iter candidate secure_check;
-  Printf.printf "decrytable number= %d\n" (List.length !dec_blocks);
-  Printf.printf "secure number= %d\n" (List.length !secure_blocks)
+  Printf.printf "decrytable=%d " (List.length !dec_blocks);
+  Printf.printf "secure=%d\n" (List.length !secure_blocks);
+
+  
+  (* let g = MoGraph.create n_src v_a (List.nth_exn !secure_blocks 2) in *)
+  (* MoGraph.display_with_feh g *)
+  
+  (* let test_l = [2; 11; 72] in *)
   (* List.iter !dec_blocks (fun e -> Printf.printf "%s\n" (str_of_tuple_l e)) *)
   (* Printf.printf "%s\n" (str_op_of_tuple_l (List.nth_exn !dec_blocks 2) v_a); *)
   (* Printf.printf "%s\n" (str_op_of_tuple_l (List.nth_exn !dec_blocks 11) v_a); *)

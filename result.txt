@@ -1,11 +1,8 @@
-# found modes: 8836
-# modes of size 1 = 0
-# modes of size 2 = 0
-# modes of size 3 = 0
-# modes of size 4 = 0
-# modes of size 5 = 0
-# modes of size 6 = 0
-# modes of size 7 = 50
-# modes of size 8 = 549
-# modes of size 9 = 3130
-# modes of size 10 = 5107
+n_src=2, n_xor=1, n_prf=1
+base graph=5 candidate=25 decrytable=20 secure=3
+n_src=2, n_xor=1, n_prf=2
+base graph=5 candidate=50 decrytable=40 secure=3
+n_src=3, n_xor=1, n_prf=1
+base graph=63 candidate=369 decrytable=170 secure=12
+n_src=3, n_xor=2, n_prf=1
+base graph=2025 candidate=16722 decrytable=9075 secure=790
