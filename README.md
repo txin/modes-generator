@@ -12,12 +12,11 @@ Then run:
 
 > ocaml setup.ml -build
 
-To reproduce the results from the paper, run the following:
+> ./mosynth.native -src 2 -xor 1 -prf 1
 
-> ./mosynth.native -all -block-size 10 -valid-count
+New generation code
 
-> ./mosynth.native -all -block-size 10 -decryptable-count
+--------------------------------------------------------------------------
 
-> ./mosynth.native -all -block-size 10
-
+Built upon the modes-generator created by Alex J. Malozemoff
 Please e-mail "amaloz at cs dot umd dot edu" if you encounter any issues.
