@@ -13,15 +13,6 @@ module V = struct type t = MoOps.instruction end
 module G = Graph.Imperative.Digraph.AbstractLabeled(V)(E) 
 module Topo = Topological.Make_stable(G)
 
-module PathWeight = struct
-  type edge = G.E.t
-  type t = int
-  let weight x = 0
-  let zero = 0
-  let add = (+)
-  let compare = compare
-end
-
 type t = {g : G.t; v : G.V.t array; n_src: int} 
 
 let string_of_v v =
@@ -97,10 +88,10 @@ let clear t =
   fam_cnt := 1
 
 (* assign_families using toplogical sort *)
-let assign_families g = 
+let assign_families t = 
   Log.info("assign_families");
-  (* clear g; *)
-  Topo.iter (fun v -> match_label g v) g
+  clear t;
+  Array.iter t.v (fun e -> match_label t.g e)
 
 (* validate with SMT solver *)
 let validate t =
@@ -109,15 +100,8 @@ let validate t =
   let f v =
     Log.debug "  Hit %s" ((MoOps.Instruction(G.V.label v)) |> MoInst.string_of_t);
     MoSmt.op smt (G.V.label v) in
-  (* Topological iterator only supports functor with unit as return value *)
-  (* concatenate the list*)
-  let v_list = ref [] in
-  let add_v_list v =
-    v_list := List.append !v_list [v];
-    () in
-  (* convert Topological iterator to a list *)
-  Topo.iter (fun v -> add_v_list v) t.g;
-  List.iter !v_list f;
+
+  Array.iter t.v f;
   MoSmt.finalize smt;
   let fname = Filename.temp_file "z3" ".smt2" in
   MoSmt.write_to_file smt fname;
@@ -130,14 +114,12 @@ let validate t =
 let create n_src block_v block_e =
   let g = G.create() in
   let v = G.V.create Start in
-  
   let block_len = Array.length block_v in
   (* calculate from the block length and number of INIT for the START vertices *)
   let v_a = Array.create (block_len + 4 * (n_src - 1)) v in
 
   let v_ctr = ref 0 in
   let addV inst_str phase =
-    Log.debug "%s" inst_str;
     let inst = MoInst.from_string inst_str phase in
     match inst with
     | Instruction i ->
@@ -153,11 +135,9 @@ let create n_src block_v block_e =
   (* a list of tuples to represent the edges*)
   (* last tuple connects Init and Block *)
   let init_e = [(0, 1); (1, 2); (1, 3)] in
-  let add_edge_tuple tup =
-    let (src, dst) = tup in
-    G.add_edge g v_a.(src) v_a.(dst)
+  let add_edge_tuple (src, dst) =
+    G.add_edge g v_a.(src) v_a.(dst);
   in
-  
   (* add n_src - 2 initialised vectors *)
   for i = 0 to n_src - 2 do
     List.iter init (fun e -> addV e Init);
@@ -166,12 +146,20 @@ let create n_src block_v block_e =
                                    (fun (x, y) -> (x + tmp_len, y + tmp_len)) in
     List.iter init_connection add_edge_tuple;
     (* connect to the block *)
-    G.add_edge g v_a.(tmp_len + 3) v_a.(i);
+    add_edge_tuple (tmp_len + 3, i);
   done;
-  
   List.iter block_e add_edge_tuple;
-  assign_families g;
-  let t = {g = g; v = v_a; n_src = n_src} in
+  
+  let ctr = ref 0 in
+  (* sort the vertex array into a vertex array *)
+  let v_a_sorted = Array.create (Array.length v_a) (v_a.(0)) in
+  let add_to_v_a_sorted v =
+    v_a_sorted.(!ctr) <- v;
+    ctr := !ctr + 1
+  in
+  Topo.iter (fun e -> add_to_v_a_sorted e) g;
+  let t = {g = g; v = v_a_sorted; n_src = n_src} in
+  assign_families t;
   t
 
 (* display with dot file*)

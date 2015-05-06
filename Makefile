@@ -1,3 +1,3 @@
 all:
 	ocaml setup.ml -build
-	./mosynth.native -print-modes -all -block-size 7
+	./mosynth.native -src 2 -xor 1 -prf 2
