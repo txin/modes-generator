@@ -3,6 +3,16 @@ base graph=5 candidate=25 decrytable=20 secure=3
 n_src=2, n_xor=1, n_prf=2
 base graph=5 candidate=50 decrytable=40 secure=3
 n_src=3, n_xor=1, n_prf=1
-base graph=63 candidate=369 decrytable=170 secure=12
+base graph=63 candidate=369 decrytable=170 secure=20
+n_src=3, n_xor=1, n_prf=2
+base graph=63 candidate=909 decrytable=419 secure=28
+n_src=3, n_xor=1, n_prf=3
+base graph=63 candidate=1206 decrytable=556 secure=16
 n_src=3, n_xor=2, n_prf=1
-base graph=2025 candidate=16722 decrytable=9075 secure=790
+base graph=2025 candidate=16722 decrytable=9075 secure=1097
+n_src=3, n_xor=2, n_prf=2
+base graph=2025 candidate=62442 decrytable=33906 secure=2374
+n_src=3, n_xor=2, n_prf=3
+base graph=2025 candidate=138852 decrytable=75420 secure=2676
+n_src=4, n_xor=2, n_prf=1
+base graph=41964 candidate=384468 decrytable=146526 secure=15897

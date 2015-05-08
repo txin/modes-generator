@@ -1,5 +1,5 @@
 all:
 	ocaml setup.ml -build
-	./mosynth.native
+	./mosynth.native -src 2 -xor 1 -prf 1
 
 

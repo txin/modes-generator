@@ -203,7 +203,7 @@ let is_decryptable t =
   Log.debug "Checking decryptability...";
   let m_idx = t.n_src - 1 in
   let m_v = t.v.(m_idx) in
-  let out_idx = 2 * t.n_src - 2 in
+  let out_idx = t.n_src in
   let out_v = t.v.(out_idx) in
   let module P_check = Path.Check(G) in
   let path_checker = P_check.create t.g in
